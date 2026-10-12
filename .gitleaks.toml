@@ -1,0 +1,16 @@
+# Gitleaks config — fail CI if a secret is committed.
+# Mirrors the practice in InnerWarden (.gitleaks.toml).
+title = "cerberus gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "example / test fixtures"
+paths = [
+  "demo/",
+  '''policy.example.json''',
+  ".dev.vars.example",
+]
+# Fake tokens used by the mock binding in tests.
+regexes = ['''fake-token-\d+''']

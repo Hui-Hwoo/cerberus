@@ -1,0 +1,39 @@
+{
+  "_comment": "EXAMPLE ONLY \u2014 never commit real keys. Provision with: wrangler secret put AGENT_KEYS_JSON < keys.json. expiresAt is optional ISO 8601; absent = never expires; expired keys get 401.",
+  "keys": {
+    "cbk_admin_REPLACE_ME": {
+      "agentId": "admin",
+      "canApprove": true,
+      "isAdmin": true,
+      "roles": [
+        "admin"
+      ]
+    },
+    "cbk_be_REPLACE_ME": {
+      "agentId": "agent-be-1",
+      "roles": [
+        "backend-dev"
+      ]
+    },
+    "cbk_docs_REPLACE_ME": {
+      "agentId": "agent-docs-1",
+      "roles": [
+        "docs-writer"
+      ],
+      "expiresAt": "2026-11-01T00:00:00Z"
+    },
+    "cbk_lead_REPLACE_ME": {
+      "agentId": "agent-lead-1",
+      "canApprove": true,
+      "roles": [
+        "release-manager"
+      ]
+    },
+    "cbk_rel_REPLACE_ME": {
+      "agentId": "agent-rel-1",
+      "roles": [
+        "release-manager"
+      ]
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "defaultEffect": "deny",
+  "rules": [
+    {
+      "actions": [
+        "read"
+      ],
+      "effect": "allow",
+      "id": "read-open",
+      "maxTtlSeconds": 3600,
+      "paths": [
+        "**"
+      ],
+      "repos": [
+        "*"
+      ],
+      "roles": [
+        "*"
+      ]
+    },
+    {
+      "actions": [
+        "read"
+      ],
+      "effect": "deny",
+      "id": "read-no-secrets",
+      "paths": [
+        "infra/secrets/**",
+        "**/*.pem",
+        "**/.env"
+      ],
+      "roles": [
+        "*"
+      ]
+    },
+    {
+      "actions": [
+        "push",
+        "create-branch"
+      ],
+      "branches": [
+        "docs/*",
+        "feat/*"
+      ],
+      "effect": "allow",
+      "id": "docs-write",
+      "maxTtlSeconds": 900,
+      "paths": [
+        "docs/**",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "repos": [
+        "*"
+      ],
+      "roles": [
+        "docs-writer"
+      ]
+    },
+    {
+      "actions": [
+        "push",
+        "create-branch"
+      ],
+      "branches": [
+        "feat/*",
+        "fix/*"
+      ],
+      "effect": "allow",
+      "id": "backend-write",
+      "maxTtlSeconds": 900,
+      "paths": [
+        "src/**",
+        "tests/**"
+      ],
+      "repos": [
+        "*"
+      ],
+      "roles": [
+        "backend-dev"
+      ]
+    },
+    {
+      "actions": [
+        "push"
+      ],
+      "effect": "deny",
+      "id": "backend-no-auth",
+      "paths": [
+        "src/auth/**"
+      ],
+      "roles": [
+        "backend-dev"
+      ]
+    },
+    {
+      "actions": [
+        "push"
+      ],
+      "branches": [
+        "main"
+      ],
+      "effect": "deny",
+      "id": "protect-main",
+      "roles": [
+        "docs-writer",
+        "backend-dev"
+      ]
+    },
+    {
+      "actions": [
+        "push"
+      ],
+      "branches": [
+        "main"
+      ],
+      "effect": "allow",
+      "id": "release-to-main-needs-approval",
+      "maxTtlSeconds": 300,
+      "paths": [
+        "**"
+      ],
+      "requireApproval": true,
+      "roles": [
+        "release-manager"
+      ]
+    }
+  ],
+  "version": 1,
+  "elevationQuorum": 1,
+  "_comment_elevationQuorum": "Distinct approvers required per elevation ticket. 1 = single approver (default). 2+ = quorum: no single approver, and never the requester, can grant elevated access alone."
+}

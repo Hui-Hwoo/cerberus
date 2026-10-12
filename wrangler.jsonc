@@ -1,0 +1,29 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "cerberus-gatekeeper",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"artifacts": [
+		{
+			"binding": "ARTIFACTS",
+			"namespace": "cerberus"
+			// "remote": true, // uncomment for local dev against the remote Artifacts service
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "AUDIT_DB",
+			"database_name": "cerberus-audit",
+			"database_id": "b1a8fb04-cfb3-4d21-99e8-8128f6264ccd"
+		}
+	],
+	"queues": {
+		"consumers": [
+			{
+				"queue": "cerberus-events",
+				"max_batch_size": 10
+			}
+		]
+	}
+}
