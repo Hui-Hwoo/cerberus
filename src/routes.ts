@@ -293,10 +293,21 @@ export async function handleFetch(
 					409,
 				);
 			}
-			const updated = await audit.addElevationApproval(ticket.id, {
-				agentId: auth.agentId,
-				ts: Date.now(),
-			});
+			const { ticket: updated, added } = await audit.addElevationApproval(
+				ticket.id,
+				{
+					agentId: auth.agentId,
+					ts: Date.now(),
+				},
+			);
+			if (!added) {
+				// Lost a race: re-read for an accurate error.
+				const fresh = await audit.getElevation(ticket.id);
+				if (fresh?.status !== "pending") {
+					return json({ error: `already ${fresh?.status}` }, 409);
+				}
+				return json({ error: "already approved by this agent" }, 409);
+			}
 			const approvals = updated?.approvals ?? [];
 			const required = ticket.requiredApprovals ?? 1;
 			if (approvals.length < required) {
@@ -310,13 +321,22 @@ export async function handleFetch(
 					202,
 				);
 			}
+			// Quorum met. Only one concurrent winner mints: the status
+			// transition is conditional on still being pending.
+			const won = await audit.setElevationStatus(
+				ticket.id,
+				"approved",
+				Date.now(),
+			);
+			if (!won) {
+				return json({ error: "already approved" }, 409);
+			}
 			const minted = await mintToken(
 				env.ARTIFACTS,
 				ticket.repo,
 				ticket.tokenScope,
 				ticket.ttlSeconds,
 			);
-			await audit.setElevationStatus(ticket.id, "approved", Date.now());
 			if (rec) {
 				const approvalDecision: Decision = {
 					allowed: true,

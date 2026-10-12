@@ -62,21 +62,29 @@ export interface AuditLog {
 	): Promise<ElevationTicket>;
 	getElevation(id: string): Promise<ElevationTicket | null>;
 	listElevations(status?: ElevationStatus): Promise<ElevationTicket[]>;
+	/**
+	 * Transition a ticket to a final status. Conditional: only applies
+	 * when the ticket is still pending. Returns true when this call won
+	 * the transition — exactly one concurrent approver/rejecter wins,
+	 * so there is never a double mint.
+	 */
 	setElevationStatus(
 		id: string,
 		status: ElevationStatus,
 		decidedTs: number,
 		tokenId?: string,
-	): Promise<void>;
+	): Promise<boolean>;
 	/**
-	 * Record one approver's approval on a pending ticket.
-	 * Returns the updated ticket, or null if not found.
-	 * Callers enforce distinctness + anti-self-approval; this just appends.
+	 * Atomically record one approver's approval on a pending ticket.
+	 * The append is conditional: it is a no-op when the ticket is no
+	 * longer pending or the agent already approved (concurrent duplicate
+	 * approvals must not double-count toward quorum).
+	 * Returns the post-update ticket and whether the approval was added.
 	 */
 	addElevationApproval(
 		id: string,
 		approval: ElevationApproval,
-	): Promise<ElevationTicket | null>;
+	): Promise<{ ticket: ElevationTicket | null; added: boolean }>;
 	logRepoEvent(
 		e: Omit<RepoEvent, "id" | "ts">,
 	): Promise<RepoEvent>;
@@ -328,22 +336,26 @@ export class MemoryAuditLog implements AuditLog {
 		status: ElevationStatus,
 		decidedTs: number,
 		tokenId?: string,
-	): Promise<void> {
+	): Promise<boolean> {
 		const t = this.tickets.get(id);
-		if (!t) throw new Error(`elevation ${id} not found`);
+		if (!t || t.status !== "pending") return false;
 		t.status = status;
 		t.decidedTs = decidedTs;
 		if (tokenId) t.tokenId = tokenId;
+		return true;
 	}
 
 	async addElevationApproval(
 		id: string,
 		approval: ElevationApproval,
-	): Promise<ElevationTicket | null> {
+	): Promise<{ ticket: ElevationTicket | null; added: boolean }> {
 		const t = this.tickets.get(id);
-		if (!t) return null;
+		if (!t || t.status !== "pending") return { ticket: t ?? null, added: false };
+		if ((t.approvals ?? []).some((a) => a.agentId === approval.agentId)) {
+			return { ticket: t, added: false };
+		}
 		t.approvals = [...(t.approvals ?? []), approval];
-		return t;
+		return { ticket: t, added: true };
 	}
 
 	private events: RepoEvent[] = [];
@@ -537,27 +549,37 @@ export class D1AuditLog implements AuditLog {
 		status: ElevationStatus,
 		decidedTs: number,
 		tokenId?: string,
-	): Promise<void> {
-		await this.db
+	): Promise<boolean> {
+		const res = await this.db
 			.prepare(
-				`UPDATE elevations SET status = ?, decided_ts = ?, token_id = ? WHERE id = ?`,
+				`UPDATE elevations SET status = ?, decided_ts = ?, token_id = ?
+				 WHERE id = ? AND status = 'pending'`,
 			)
 			.bind(status, decidedTs, tokenId ?? null, id)
 			.run();
+		return (res.meta?.rows_written ?? 0) > 0;
 	}
 
 	async addElevationApproval(
 		id: string,
 		approval: ElevationApproval,
-	): Promise<ElevationTicket | null> {
-		const current = await this.getElevation(id);
-		if (!current) return null;
-		const approvals = [...(current.approvals ?? []), approval];
-		await this.db
-			.prepare(`UPDATE elevations SET approvals = ? WHERE id = ?`)
-			.bind(JSON.stringify(approvals), id)
+	): Promise<{ ticket: ElevationTicket | null; added: boolean }> {
+		// Atomic append-if-not-duplicate: concurrent approvals from the
+		// same agent must not double-count toward quorum.
+		const res = await this.db
+			.prepare(
+				`UPDATE elevations
+				 SET approvals = json_insert(approvals, '$[#]', json(?))
+				 WHERE id = ? AND status = 'pending'
+				 AND NOT EXISTS (
+					SELECT 1 FROM json_each(approvals)
+					WHERE json_extract(json_each.value, '$.agentId') = ?
+				 )`,
+			)
+			.bind(JSON.stringify(approval), id, approval.agentId)
 			.run();
-		return { ...current, approvals };
+		const added = (res.meta?.rows_written ?? 0) > 0;
+		return { ticket: await this.getElevation(id), added };
 	}
 
 	async logRepoEvent(e: Omit<RepoEvent, "id" | "ts">): Promise<RepoEvent> {

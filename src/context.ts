@@ -36,6 +36,14 @@ export function getAudit(env: Env): AuditLog {
 }
 
 /**
+ * Test-only: drop the shared in-memory audit log so the next getAudit()
+ * starts fresh. Gives each test suite an isolated audit trail.
+ */
+export function resetFallbackAudit(): void {
+	fallbackAudit = null;
+}
+
+/**
  * Authenticate a route. Identity ALWAYS comes from the key —
  * never from the request body. Returns the key or an error Response.
  */
