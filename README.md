@@ -201,7 +201,7 @@ pushes surface as UNEXPLAINED in the UI).
 
 ## Demo video
 
-[![Cerberus demo video](docs/demo-thumbnail.png)](https://github.com/Hui-Hwoo/cerberus/releases/download/v1.0.0/cerberus-demo-final.mp4)
+[![Cerberus demo video](docs/demo-thumbnail.png)](https://github.com/Hui-Hwoo/cerberus/releases/tag/v1.0.0)
 
 6:36 — from the problem (a poisoned agent walks into `src/auth/`) through
 the six-layer permission plane: policy decisions, real Artifacts token
