@@ -52,7 +52,7 @@ for but its API can't express.
 ```bash
 npm install
 npm run demo         # 14 policy scenarios → decision metrics
-npm run lifecycle    # 23-check full request lifecycle vs mock binding
+npm run lifecycle    # 65-check full request lifecycle vs mock binding
 npm run lint:policy  # validate policy.example.json (or pass your own)
 ```
 
@@ -172,9 +172,10 @@ pushes surface as UNEXPLAINED in the UI).
   counter) — a push with no matching allow-decision means something
   bypassed the broker.
 - **Containment is automatic**: on an UNEXPLAINED push the watcher revokes
-  every outstanding write token on the repo (~30s after the push lands).
-  Read tokens are spared. This bounds the breach to the ~30s detection
-  window — it does not limit it to a single push, and it cannot undo
+  every outstanding write token on the repo (tens of seconds after the push
+  lands — event-delivery dependent, not a fixed SLA).
+  Read tokens are spared. This bounds the breach to the detection window
+  — it does not limit it to a single push, and it cannot undo
   pushes that already landed.
   Reconciliation is single-use: one allow-decision explains at most one
   push, so a bypass cannot piggyback on a recent legitimate approval.
@@ -182,23 +183,34 @@ pushes surface as UNEXPLAINED in the UI).
   files (diffed from before/after commit trees, fork-point resolved for new
   branches) fall within the decision's declared paths. Minting for
   `docs/**` and pushing `src/auth/**` to the same branch is flagged as a
-  content violation → unexplained → containment. When the diff cannot be
-  determined, the event is honestly marked `contentVerified: false`
-  instead of silently passing.
+  content violation → unexplained → containment. Known boundary: when the
+  tree diff cannot be determined, the push is marked explained with
+  `contentVerified: false` (branch + single-use matching still apply) —
+  a fail-open edge on path-scoped decisions, flagged in the event detail
+  rather than hidden.
 - **Verify the chain**: `GET /v1/verify` — any tampering with the D1
   audit table breaks the hash chain and is reported with the index.
 - Tokens are repo-scoped bearer tokens: enforcement happens at mint time.
-  The Queue watcher is defense-in-depth (detect + disarm, ~30s latency),
+  The Queue watcher is defense-in-depth (detect + disarm, tens of seconds
+  latency depending on event delivery),
   not a replacement for the gate. Residual limitation: a bypass that
   lands within the window of a legitimate outstanding approval for the
   same branch may be misattributed as explained — inherent to bearer
   tokens without push→token attribution in Artifacts events, and the
   reason scoped tokens belong on Cloudflare's roadmap.
 
-## 5-day plan
+## Demo video
 
-See [PLAN.md](PLAN.md). Target: end-to-end on real Artifacts by 10/11,
-video + submission by 10/13 (deadline 10/14).
+[![Cerberus demo video](docs/demo-thumbnail.png)](https://github.com/Hui-Hwoo/cerberus/releases/download/v1.0.0/cerberus-demo-final.mp4)
+
+6:36 — from the problem (a poisoned agent walks into `src/auth/`) through
+the six-layer permission plane: policy decisions, real Artifacts token
+minting, watcher reconciliation, multi-agent concurrency, and quorum
+elevation. Every number on screen comes from the live system.
+
+> Maintainer: create a GitHub Release tagged `v1.0.0`, attach
+> `cerberus-demo-final.mp4` (29.7 MB), and the link above works.
+> Thumbnail: `docs/demo-thumbnail.png`.
 
 ## Security
 

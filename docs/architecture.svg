@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#c9a227"/>
+    </marker>
+    <marker id="arrowB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#6ea8fe"/>
+    </marker>
+    <marker id="arrowR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#e5484d"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="#0a0a0f"/>
+
+  <!-- ===== AGENTS (left) ===== -->
+  <rect x="60" y="250" width="280" height="400" rx="14" fill="#111118" stroke="#3a3a48" stroke-width="2"/>
+  <text x="200" y="295" text-anchor="middle" fill="#e8e8ef" font-size="26" font-weight="bold">Agents</text>
+  <rect x="90" y="320" width="220" height="52" rx="8" fill="#181822" stroke="#2c2c3a"/>
+  <text x="200" y="353" text-anchor="middle" fill="#c6c6d4" font-size="20">docs-writer</text>
+  <rect x="90" y="384" width="220" height="52" rx="8" fill="#181822" stroke="#2c2c3a"/>
+  <text x="200" y="417" text-anchor="middle" fill="#c6c6d4" font-size="20">backend-dev</text>
+  <rect x="90" y="448" width="220" height="52" rx="8" fill="#181822" stroke="#2c2c3a"/>
+  <text x="200" y="481" text-anchor="middle" fill="#c6c6d4" font-size="20">release-manager</text>
+  <rect x="90" y="512" width="220" height="52" rx="8" fill="#1a1a10" stroke="#c9a227"/>
+  <text x="200" y="545" text-anchor="middle" fill="#c9a227" font-size="20">agent-lead-1 ★ approver</text>
+  <text x="200" y="610" text-anchor="middle" fill="#6b6b7d" font-size="17">bearer key only · no long-lived creds</text>
+
+  <!-- ===== WORKER (center) ===== -->
+  <rect x="420" y="80" width="680" height="740" rx="16" fill="#0e0e14" stroke="#c9a227" stroke-width="2" stroke-dasharray="10 6"/>
+  <text x="760" y="125" text-anchor="middle" fill="#c9a227" font-size="24" font-weight="bold">cerberus-gatekeeper · Cloudflare Worker</text>
+
+  <!-- Gate box -->
+  <rect x="450" y="150" width="620" height="280" rx="12" fill="#12121a" stroke="#3dd68c" stroke-width="2"/>
+  <text x="480" y="195" fill="#e8e8ef" font-size="24" font-weight="bold">Gate · auth / policy / mint token</text>
+  <text x="480" y="235" fill="#8e8e9e" font-size="18">POST /v1/token · /v1/elevate · /v1/revoke</text>
+  <text x="480" y="265" fill="#8e8e9e" font-size="18">policy.ts: ordered rules · explicit-deny-wins · default deny</text>
+  <text x="480" y="295" fill="#8e8e9e" font-size="18">audit-before-mint: decision → D1 (hash chain), then token</text>
+  <text x="480" y="325" fill="#8e8e9e" font-size="18">broker.ts: Artifacts binding → createToken(write, ≤900s)</text>
+  <text x="480" y="355" fill="#8e8e9e" font-size="18">auth: key → agentId + roles · never trusts request body</text>
+  <text x="480" y="400" fill="#3dd68c" font-size="18" font-weight="bold">① mint / elevate · bearer key</text>
+
+  <!-- Watch box -->
+  <rect x="450" y="450" width="620" height="200" rx="12" fill="#12121a" stroke="#c9a227" stroke-width="2"/>
+  <text x="480" y="495" fill="#e8e8ef" font-size="24" font-weight="bold">Watch · Queue consumer</text>
+  <text x="480" y="530" fill="#8e8e9e" font-size="18">single-use reconciliation: one decision explains one push</text>
+  <text x="480" y="560" fill="#8e8e9e" font-size="18">content verify: changed files ⊆ declared paths</text>
+  <text x="480" y="590" fill="#e5484d" font-size="18" font-weight="bold">UNEXPLAINED → revokeAllWriteTokens</text>
+  <text x="480" y="625" fill="#c9a227" font-size="18" font-weight="bold">⑤ consume events · reconcile</text>
+
+  <!-- Audit UI box -->
+  <rect x="450" y="670" width="620" height="120" rx="12" fill="#12121a" stroke="#6ea8fe" stroke-width="2"/>
+  <text x="480" y="712" fill="#e8e8ef" font-size="24" font-weight="bold">Audit UI · GET /</text>
+  <text x="480" y="748" fill="#8e8e9e" font-size="18">decisions · elevations · repo activity · hash-chain verify</text>
+
+  <!-- ===== D1 (right top) ===== -->
+  <rect x="1180" y="80" width="360" height="220" rx="12" fill="#111118" stroke="#6ea8fe" stroke-width="2"/>
+  <text x="1360" y="125" text-anchor="middle" fill="#6ea8fe" font-size="24" font-weight="bold">D1 · cerberus-audit</text>
+  <text x="1360" y="165" text-anchor="middle" fill="#8e8e9e" font-size="18">decisions · elevations · repo_events</text>
+  <text x="1360" y="200" text-anchor="middle" fill="#8e8e9e" font-size="18">SHA-256 hash chain · UNIQUE(prev_hash)</text>
+  <text x="1360" y="235" text-anchor="middle" fill="#8e8e9e" font-size="18">concurrency-safe appends + retry</text>
+  <text x="1360" y="270" text-anchor="middle" fill="#6ea8fe" font-size="18" font-weight="bold">② audit log write</text>
+
+  <!-- ===== ARTIFACTS (right mid) ===== -->
+  <rect x="1180" y="330" width="360" height="240" rx="12" fill="#111118" stroke="#b18cff" stroke-width="2"/>
+  <text x="1360" y="375" text-anchor="middle" fill="#b18cff" font-size="24" font-weight="bold">Artifacts · namespace</text>
+  <text x="1360" y="415" text-anchor="middle" fill="#8e8e9e" font-size="18">git repos (e.g. cerberus-demo)</text>
+  <text x="1360" y="450" text-anchor="middle" fill="#8e8e9e" font-size="18">createToken / revokeToken</text>
+  <text x="1360" y="485" text-anchor="middle" fill="#8e8e9e" font-size="18">readCommit / readTree (content check)</text>
+  <text x="1360" y="520" text-anchor="middle" fill="#e5484d" font-size="18">tokens are repo-scoped: no path limits</text>
+  <text x="1360" y="550" text-anchor="middle" fill="#b18cff" font-size="18" font-weight="bold">③ mint short-lived token</text>
+
+  <!-- ===== QUEUE (right bottom) ===== -->
+  <rect x="1180" y="600" width="360" height="220" rx="12" fill="#111118" stroke="#c9a227" stroke-width="2"/>
+  <text x="1360" y="645" text-anchor="middle" fill="#c9a227" font-size="24" font-weight="bold">Queue · cerberus-events</text>
+  <text x="1360" y="685" text-anchor="middle" fill="#8e8e9e" font-size="18">event subscription:</text>
+  <text x="1360" y="715" text-anchor="middle" fill="#8e8e9e" font-size="18">cf.artifacts.repo.pushed</text>
+  <text x="1360" y="745" text-anchor="middle" fill="#8e8e9e" font-size="18">cf.artifacts.repo.token.*</text>
+  <text x="1360" y="780" text-anchor="middle" fill="#c9a227" font-size="18" font-weight="bold">④ deliver → Watch</text>
+
+  <!-- ===== FLOWS ===== -->
+  <!-- 1: agents -> gate -->
+  <line x1="340" y1="420" x2="448" y2="330" stroke="#c9a227" stroke-width="3" marker-end="url(#arrow)"/>
+  <!-- 2: gate -> D1 -->
+  <line x1="1070" y1="230" x2="1178" y2="190" stroke="#6ea8fe" stroke-width="3" marker-end="url(#arrowB)"/>
+  <!-- 3: gate -> artifacts (mint) -->
+  <line x1="1070" y1="350" x2="1178" y2="430" stroke="#b18cff" stroke-width="3" marker-end="url(#arrow)"/>
+  <!-- 4: artifacts -> queue (events) -->
+  <line x1="1360" y1="570" x2="1360" y2="598" stroke="#c9a227" stroke-width="3" marker-end="url(#arrow)"/>
+  <!-- 5: queue -> watch -->
+  <line x1="1178" y1="700" x2="1072" y2="560" stroke="#c9a227" stroke-width="3" marker-end="url(#arrow)"/>
+  <!-- push: agents -> artifacts (git push with minted token) -->
+  <path d="M 200 650 C 200 780, 900 860, 1290 780 S 1420 620, 1360 572" fill="none" stroke="#3a3a48" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="760" y="845" text-anchor="middle" fill="#6b6b7d" font-size="18">git push · short-lived token (http.extraHeader Bearer)</text>
+  <!-- containment: watch -> artifacts (revoke) -->
+  <line x1="1072" y1="520" x2="1178" y2="480" stroke="#e5484d" stroke-width="3" stroke-dasharray="8 5" marker-end="url(#arrowR)"/>
+  <text x="1125" y="470" text-anchor="middle" fill="#e5484d" font-size="16">revoke</text>
+
+  <!-- footer note -->
+  <text x="800" y="885" text-anchor="middle" fill="#555566" font-size="16">fail-closed · audit-before-mint · detect + disarm (event-delivery dependent, tens of seconds)</text>
+</svg>
